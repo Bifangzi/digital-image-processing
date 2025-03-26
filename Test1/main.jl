@@ -6,7 +6,7 @@ import TyBase.delete
 
 ## 清空环境
 
-delete("./write_photo.jpg")
+delete("Test1/write_photo.jpg")
 plt_close("all")
 clear()
 clc()
@@ -48,7 +48,8 @@ imshowpair(Photo_4,Photo_5)
 
 
 # 保存图像
-imwrite(Photo_1,"write_photo.jpg")
+imwrite(Photo_1,"Test1/write_photo.jpg")
+
 
 # 转化为二值图像
 bw_photo=im2bw(Photo_1,0.5)
