@@ -1,7 +1,7 @@
 ## 导入所需库
 
 using TyImageProcessing
-using TyPlot
+import TyPlot.title
 import TyBase.delete
 
 ## 清空环境
@@ -12,18 +12,17 @@ clear()
 clc()
 
 
-
 ## 读入图像 
-Photo_1 = imread("./TestPhotos/couple1.jpg")
-Photo_2 = imread("./TestPhotos/couple2.jpg")
-Photo_3 = imread("./TestPhotos/couple3.jpg")
-Photo_4 = imread("./TestPhotos/lena1.jpg")
-Photo_5 = imread("./TestPhotos/lena2.jpg")
-Photo_6 = imread("./TestPhotos/lena3.jpg")
-Photo_7 = imread("./TestPhotos/NBA1.jpg")
-Photo_8 = imread("./TestPhotos/NBA2.jpg")
-Photo_9 = imread("./TestPhotos/NBA3.jpg")
-Photo_10 = imread("./TestPhotos/town.jpg")
+Photo_1 = imread("Test1/TestPhotos/couple1.jpg")
+Photo_2 = imread("Test1/TestPhotos/couple2.jpg")
+Photo_3 = imread("Test1/TestPhotos/couple3.jpg")
+Photo_4 = imread("Test1/TestPhotos/lena1.jpg")
+Photo_5 = imread("Test1/TestPhotos/lena2.jpg")
+Photo_6 = imread("Test1/TestPhotos/lena3.jpg")
+Photo_7 = imread("Test1/TestPhotos/NBA1.jpg")
+Photo_8 = imread("Test1/TestPhotos/NBA2.jpg")
+Photo_9 = imread("Test1/TestPhotos/NBA3.jpg")
+Photo_10 = imread("Test1/TestPhotos/town.jpg")
 
 ## 实验内容
 
@@ -57,7 +56,7 @@ figure("二值图像")
 imshow(bw_photo)
 
 # 获取图像信息
-photo_info=imfinfo("./TestPhotos/couple1.jpg")
+photo_info=imfinfo("Test1/TestPhotos/couple1.jpg")
 
 
 # 直方图均衡化
