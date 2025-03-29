@@ -6,23 +6,23 @@ import TyBase.delete
 
 ## 清空环境
 
-delete("Test1/write_photo.jpg")
+delete("./write_photo.jpg")
 plt_close("all")
 clear()
 clc()
 
 
 ## 读入图像 
-Photo_1 = imread("Test1/TestPhotos/couple1.jpg")
-Photo_2 = imread("Test1/TestPhotos/couple2.jpg")
-Photo_3 = imread("Test1/TestPhotos/couple3.jpg")
-Photo_4 = imread("Test1/TestPhotos/lena1.jpg")
-Photo_5 = imread("Test1/TestPhotos/lena2.jpg")
-Photo_6 = imread("Test1/TestPhotos/lena3.jpg")
-Photo_7 = imread("Test1/TestPhotos/NBA1.jpg")
-Photo_8 = imread("Test1/TestPhotos/NBA2.jpg")
-Photo_9 = imread("Test1/TestPhotos/NBA3.jpg")
-Photo_10 = imread("Test1/TestPhotos/town.jpg")
+Photo_1 = imread("./TestPhotos/couple1.jpg");
+Photo_2 = imread("./TestPhotos/couple2.jpg");
+Photo_3 = imread("./TestPhotos/couple3.jpg");
+Photo_4 = imread("./TestPhotos/lena1.jpg");
+Photo_5 = imread("./TestPhotos/lena2.jpg");
+Photo_6 = imread("./TestPhotos/lena3.jpg");
+Photo_7 = imread("./TestPhotos/NBA1.jpg");
+Photo_8 = imread("./TestPhotos/NBA2.jpg");
+Photo_9 = imread("./TestPhotos/NBA3.jpg");
+Photo_10 = imread("./TestPhotos/town.jpg");
 
 ## 实验内容
 
@@ -57,7 +57,7 @@ figure("二值图像")
 imshow(bw_photo)
 
 # 获取图像信息
-photo_info=imfinfo("Test1/TestPhotos/couple1.jpg")
+photo_info=imfinfo("./TestPhotos/couple1.jpg")
 
 
 # 直方图均衡化
@@ -76,3 +76,66 @@ subplot(2,2,4)
 imhist(histeq_photo,64,fig=true)
 title("均衡化后直方图")
 
+## 思考题
+
+
+
+
+I = imread("./TestPhotos/lena.bmp");
+
+
+
+## 亮暗图像直方图均衡化对比
+
+# 原图像
+dark_photo = Photo_6
+light_photo = Photo_5
+figure("亮/暗原图像")
+subplot(2,2,1)
+imshow(light_photo)
+title("亮图像")
+subplot(2,2,2)
+imhist(light_photo,64,fig=true)
+title("亮图像直方图")
+subplot(2,2,3)
+imshow(dark_photo)
+title("暗图像")
+subplot(2,2,4)
+imhist(dark_photo,64,fig=true)
+title("暗图像直方图")
+
+# 直方图均衡化处理
+light_histeq_photo = histeq(light_photo)
+figure("亮/暗图像均衡化处理")
+subplot(2,2,1)
+imshow(light_histeq_photo)
+title("亮图像均衡化处理")
+subplot(2,2,2)
+imhist(light_histeq_photo,64,fig=true)
+title("亮图像处理后直方图")
+dark_histeq_photo = histeq(dark_photo)
+subplot(2,2,3)
+imshow(dark_histeq_photo)
+title("暗图像均衡化处理")
+subplot(2,2,4)
+imhist(dark_histeq_photo,64,fig=true)
+title("暗图像处理后直方图")
+
+
+
+
+## (6) 如果对同一幅图像连续两次进行直方图均衡化，能否进一步改善图像的质量？
+dou_histeq_photo = histeq(histeq_photo)
+figure("两次直方图均衡化处理")
+subplot(2,2,1)
+imshow(histeq_photo)
+title("一次均衡化处理")
+subplot(2,2,2)
+imhist(histeq_photo,64,fig=true)
+title("一次处理直方图")
+subplot(2,2,3)
+imshow(dou_histeq_photo)
+title("两次均衡化图像")
+subplot(2,2,4)
+imhist(dou_histeq_photo,64,fig=true)
+title("两次处理直方图")
