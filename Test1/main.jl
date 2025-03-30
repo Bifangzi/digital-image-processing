@@ -1,7 +1,8 @@
 ## 导入所需库
 
 using TyImageProcessing
-import TyPlot.title
+using Printf
+import TyPlot
 import TyBase.delete
 
 ## 清空环境
@@ -48,13 +49,19 @@ imshowpair(Photo_4,Photo_5)
 
 
 # 保存图像
-imwrite(Photo_1,"Test1/write_photo.jpg")
+imwrite(Photo_1,"./write_photo.jpg")
 
 
 # 转化为二值图像
-bw_photo=im2bw(Photo_1,0.5)
 figure("二值图像")
-imshow(bw_photo)
+for i = 1:4
+    level = 0.1*i
+    subplot(2,2,i)
+    bw_photo=im2bw(Photo_1,level)
+    imshow(bw_photo)
+    str_level = @sprintf("%0.1f",level)
+    title("Level = " *str_level* "")
+end
 
 # 获取图像信息
 photo_info=imfinfo("./TestPhotos/couple1.jpg")
