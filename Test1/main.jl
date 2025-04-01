@@ -7,7 +7,7 @@ import TyBase.delete
 
 ## 清空环境
 
-delete("./write_photo.jpg")
+delete("./result/write_photo.jpg")
 plt_close("all")
 clear()
 clc()
@@ -39,17 +39,18 @@ title("Photo_1")
 
 # 复合图像
 figure("复合图像")
-fuse_photo, =imfuse(Photo_1,Photo_2)
+fuse_photo, =imfuse(Photo_1,Photo_4)
 imshow(fuse_photo)
 
 
 # 显示图像差异
 figure("图像差异")
-imshowpair(Photo_4,Photo_5)
+Photo_1_rev = imrotate(Photo_1,10,"bicubic","crop")
+imshowpair(Photo_1,Photo_1_rev)
 
 
 # 保存图像
-imwrite(Photo_1,"./write_photo.jpg")
+imwrite(Photo_1,"./result/write_photo.jpg")
 
 
 # 转化为二值图像
