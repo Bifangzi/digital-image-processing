@@ -39,8 +39,10 @@ Photo_2_fft = fftshift(Photo_2_fft)
 
 ## 创建图像的幅度谱图
 # 取常用对数便于观察
-Photo_2_fft_log = log10.(Photo_2_fft)
+Photo_2_fft_log = log10.(abs.(Photo_2_fft))
+figure("原图像频谱")
 mesh(Photo_2_fft_log)
+zlim([0 7])
 
 
 ## 构建理想低通滤波器
@@ -56,15 +58,37 @@ function lowpass_filter(p,tf)
     return p
 end
 
-parms = Photo_2_fft
-ret = lowpass_filter(parms,7000)
+params = abs.(Photo_2_fft)
+ret = lowpass_filter(params,20000)
+figure("理想低通滤波后频谱")
 mesh(log10.(ret))
+zlim([0 7])
 
 
 
 ## 构建Butterworth低通滤波器
-b,a = butter(6,0.6,"lowpass")
-freqs(b,a;plotfig = true)
+
+# lf = 1500
+# b,a = butter(6,2*pi*lf,"s","lowpass")
+# h,wout=freqs(b,a;plotfig = true)
+
+function butter_lowpass_filter(p,d0,n)
+    m,n=size(p)
+    ret = zeros(m,n)
+
+
+    
+    u,v=meshgrid2(1:m,1:n)
+    center_x = (m + 1)/2
+    center_y = (n + 1)/2
+    D = sqrt((u - center_x).^2 + (v - center_y).^2)
+    # for i=1:m
+    #     for j=1:n
+    ret[i,j]=H = 1 ./ (1 .+ (D ./ d0).^(2*n))
+    
+end
+
+y = butter_lowpass_filter(Photo_2,1500,6)
 
 ## 构建理想高通滤波器
 function highpass_filter(p,tf)
@@ -78,22 +102,37 @@ function highpass_filter(p,tf)
     end
     return p
 end
+
+params = abs.(Photo_2_fft)
+ret = highpass_filter(params,1500)
+figure("理想高通滤波后频谱")
+mesh(log10.(ret))
+zlim([0 7])
+
+
 ## 构建Butterworth高通滤波器
-b,a = butter(9,0.6,"highpass")
+hf = 20000
+b,a = butter(9,2*pi*hf,"s","highpass")
 freqs(b,a,plotfig = true)
 
+
 ## 频谱反移
+
 Photo_2_ifft = ifftshift(Photo_2_fft)
+
 
 ## 图像逆傅里叶变换
 Photo_2_ifft = ifft(Photo_2_ifft)
-Photo_2_ifft = UInt8.floor.abs.(Photo_2_ifft)
+Photo_2_ifft = UInt8.(floor.(abs.(Photo_2_ifft)))
 # imshow(Photo_2_ifft)
+
 
 ## 滤波后图像幅度频谱
 
 
-## 滤波器幅度谱
+## 不同滤波器幅度谱
 
 
+# import TyFilterDesigner.filterDesigner; 
+# filterDesigner()
 
