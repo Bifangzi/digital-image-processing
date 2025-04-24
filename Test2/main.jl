@@ -67,9 +67,9 @@ function lowpass_filter(p,d0)
 end
 
 # params = real.(Photo_2_fft)
-ret = lowpass_filter(Photo_2,100)
+ret1 = lowpass_filter(Photo_2,100)
 figure("理想低通滤波后频谱")
-mesh(ret)
+mesh(ret1)
 # zlim([0 7])
 
 
@@ -127,9 +127,9 @@ function highpass_filter(p,d0)
 end
 
 params = real.(Photo_2_fft)
-ret = highpass_filter(Photo_2,100)
+ret2 = highpass_filter(Photo_2,100)
 figure("理想高通滤波频谱")
-mesh(ret)
+mesh(ret2)
 
 
 ## 构建Butterworth高通滤波器
@@ -157,9 +157,11 @@ function bu_highpass_filter(p,d0,N)
 
 end
 
-butter_high = bu_highpass_filter(Photo_2_gray,150,6)
+butter_high = bu_highpass_filter(Photo_1,70,3)
 figure("Butterworth highpass")
 surf(butter_high)
+
+## 图像低通滤波处理
 
 ## 频谱反移
 
@@ -189,12 +191,71 @@ mesh(Photo_2_fft_f_log)
 zlim([0 7])
 
 
+## 图像低通滤波处理
 
+
+## 显示图像
+figure("高通滤波原图像")
+imshow(Photo_1)
+
+
+## 图像傅里叶变换
+# 灰度化图像
+Photo_1_gray = im2gray(Photo_1)
+# imshow(Photo_2_gray)
+Photo_1_fft = fft(Photo_1_gray)
+
+
+## 将零频分量移到频谱中心
+# Photo_2_fft = fftshift(abs.(Photo_2_fft))
+Photo_1_fft = fftshift(Photo_1_fft)
+
+## 创建图像的幅度谱图
+# 取常用对数便于观察
+Photo_1_fft_log = log10.(abs.(Photo_1_fft))
+figure("原图像频谱")
+mesh(Photo_1_fft_log)
+zlim([0 7])
+
+
+## 频谱反移
+
+Photo_1_ifft = Photo_1_fft.*butter_high
+Photo_1_ifft = ifftshift(Photo_1_ifft)
+
+
+## 图像逆傅里叶变换
+Photo_1_ifft = ifft(Photo_1_ifft)
+Photo_1_ifft = UInt8.(floor.(abs.(real.(Photo_1_ifft))))
+figure("滤波后图像")
+imshow(Photo_1_ifft)
+
+
+## 滤波后图像幅度频谱
+Photo_1_fft_f = fft(Photo_1_ifft)
+
+
+
+# Photo_2_fft = fftshift(abs.(Photo_2_fft))
+Photo_1_fft_f = fftshift(Photo_1_fft_f)
+
+
+Photo_1_fft_f_log = log10.(abs.(Photo_1_fft_f))
+figure("滤波后图像频谱")
+mesh(Photo_1_fft_f_log)
+zlim([0 7])
 
 
 ## 不同滤波器幅度谱
-# figure("不同滤波器幅度谱")
-# subplot(2,2,1)
+figure("不同滤波器幅度谱")
+subplot(2,2,1)
+surf(ret1)
+subplot(2,2,2)
+surf(ret2)
+subplot(2,2,3)
+surf(butter_low)
+subplot(2,2,4)
+mesh(butter_high)
 
 
 
