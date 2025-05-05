@@ -23,6 +23,7 @@ Photo_3 = imread("./TestPhotos/lena.jpg");
 
 
 ## 显示图像
+figure("Photo_2")
 imshow(Photo_2)
 
 
@@ -40,7 +41,7 @@ Photo_2_fft = fftshift(Photo_2_fft)
 ## 创建图像的幅度谱图
 # 取常用对数便于观察
 Photo_2_fft_log = log10.(abs.(Photo_2_fft))
-figure("原图像频谱")
+figure("Photo_2原图像频谱")
 mesh(Photo_2_fft_log)
 zlim([0 7])
 
@@ -68,7 +69,7 @@ end
 
 # params = real.(Photo_2_fft)
 ret1 = lowpass_filter(Photo_2,100)
-figure("理想低通滤波后频谱")
+figure("理想低通滤波频谱")
 mesh(ret1)
 # zlim([0 7])
 
@@ -172,7 +173,7 @@ Photo_2_ifft = ifftshift(Photo_2_ifft)
 ## 图像逆傅里叶变换
 Photo_2_ifft = ifft(Photo_2_ifft)
 Photo_2_ifft = UInt8.(floor.(abs.(real.(Photo_2_ifft))))
-figure("滤波后图像")
+figure("低通滤波后图像")
 imshow(Photo_2_ifft)
 
 
@@ -186,7 +187,7 @@ Photo_2_fft_f = fftshift(Photo_2_fft_f)
 
 
 Photo_2_fft_f_log = log10.(abs.(Photo_2_fft_f))
-figure("滤波后图像频谱")
+figure("低通滤波后图像频谱")
 mesh(Photo_2_fft_f_log)
 zlim([0 7])
 
@@ -213,7 +214,7 @@ Photo_1_fft = fftshift(Photo_1_fft)
 ## 创建图像的幅度谱图
 # 取常用对数便于观察
 Photo_1_fft_log = log10.(abs.(Photo_1_fft))
-figure("原图像频谱")
+figure("Photo_1原图像频谱")
 mesh(Photo_1_fft_log)
 zlim([0 7])
 
@@ -227,7 +228,7 @@ Photo_1_ifft = ifftshift(Photo_1_ifft)
 ## 图像逆傅里叶变换
 Photo_1_ifft = ifft(Photo_1_ifft)
 Photo_1_ifft = UInt8.(floor.(abs.(real.(Photo_1_ifft))))
-figure("滤波后图像")
+figure("高通滤波后图像")
 imshow(Photo_1_ifft)
 
 
@@ -241,7 +242,7 @@ Photo_1_fft_f = fftshift(Photo_1_fft_f)
 
 
 Photo_1_fft_f_log = log10.(abs.(Photo_1_fft_f))
-figure("滤波后图像频谱")
+figure("高通滤波后图像频谱")
 mesh(Photo_1_fft_f_log)
 zlim([0 7])
 
@@ -250,12 +251,16 @@ zlim([0 7])
 figure("不同滤波器幅度谱")
 subplot(2,2,1)
 surf(ret1)
+title("理想低通频谱")
 subplot(2,2,2)
 surf(ret2)
+title("理想高通频谱")
 subplot(2,2,3)
 surf(butter_low)
+title("Butterworth低通频谱")
 subplot(2,2,4)
 mesh(butter_high)
+title("Butterworth高通频谱")
 
 
 
