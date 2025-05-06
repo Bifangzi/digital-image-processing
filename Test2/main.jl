@@ -84,9 +84,6 @@ mesh(ret1)
 function bu_lowpass_filter(p,d0,N)
     m,n=size(p)
     ret = zeros(m,n)
-
-
-    
     # u,v=meshgrid2(1:m,1:n)
     center_x = (m + 1)/2
     center_y = (n + 1)/2
@@ -236,7 +233,6 @@ imshow(Photo_1_ifft)
 Photo_1_fft_f = fft(Photo_1_ifft)
 
 
-
 # Photo_2_fft = fftshift(abs.(Photo_2_fft))
 Photo_1_fft_f = fftshift(Photo_1_fft_f)
 
@@ -261,6 +257,3 @@ title("Butterworth低通频谱")
 subplot(2,2,4)
 mesh(butter_high)
 title("Butterworth高通频谱")
-
-
-
