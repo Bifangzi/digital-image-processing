@@ -68,7 +68,7 @@ function lowpass_filter(p,d0)
 end
 
 # params = real.(Photo_2_fft)
-ret1 = lowpass_filter(Photo_2,100)
+ret1 = lowpass_filter(Photo_2,30)
 figure("理想低通滤波频谱")
 mesh(ret1)
 # zlim([0 7])
@@ -125,7 +125,7 @@ function highpass_filter(p,d0)
 end
 
 params = real.(Photo_2_fft)
-ret2 = highpass_filter(Photo_2,100)
+ret2 = highpass_filter(Photo_1,60)
 figure("理想高通滤波频谱")
 mesh(ret2)
 
@@ -257,3 +257,39 @@ title("Butterworth低通频谱")
 subplot(2,2,4)
 mesh(butter_high)
 title("Butterworth高通频谱")
+
+##
+Photo_2_ifft = Photo_2_fft.*ret1
+Photo_2_ifft = ifftshift(Photo_2_ifft)
+
+
+## 图像逆傅里叶变换
+Photo_2_ifft = ifft(Photo_2_ifft)
+Photo_2_ifft = UInt8.(floor.(abs.(real.(Photo_2_ifft))))
+figure("低通滤波后图像")
+imshow(Photo_2_ifft)
+
+## 滤波后图像幅度频谱
+Photo_2_fft_f = fft(Photo_2_ifft)
+
+
+
+# Photo_2_fft = fftshift(abs.(Photo_2_fft))
+Photo_2_fft_f = fftshift(Photo_2_fft_f)
+
+
+Photo_2_fft_f_log = log10.(abs.(Photo_2_fft_f))
+figure("低通滤波后图像频谱")
+mesh(Photo_2_fft_f_log)
+zlim([0 7])
+
+## 
+Photo_1_ifft = Photo_1_fft.*ret2
+Photo_1_ifft = ifftshift(Photo_1_ifft)
+
+
+## 图像逆傅里叶变换
+Photo_1_ifft = ifft(Photo_1_ifft)
+Photo_1_ifft = UInt8.(floor.(abs.(real.(Photo_1_ifft))))
+figure("高通滤波后图像")
+imshow(Photo_1_ifft)
