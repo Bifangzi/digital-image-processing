@@ -4,8 +4,8 @@ clear;clc;
 
 %% 读取实验图像
 
-photo_a = imread("house.jpg");
-photo_b = imread("M_M.bmp");
+photo_a = imread("./TestPhotos/house.jpg");
+photo_b = imread("./TestPhotos/M_M.bmp");
 
 % 图像a存在白色边框，剔除以避免影响后续边缘提取
 photo_a = photo_a(3:243,2:322,:);
