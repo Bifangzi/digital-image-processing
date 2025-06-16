@@ -5,7 +5,7 @@ function [H,theta,rho,x,y,lines] = find_line(image)
 [H, theta, rho] = hough(image);
 
 % 寻找Hough变换的峰值点
-peaks = houghpeaks(H, 5);
+peaks = houghpeaks(H, 2);
 x = theta(peaks(:, 2));
 y = rho(peaks(:, 1));
 

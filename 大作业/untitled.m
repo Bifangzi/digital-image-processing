@@ -9,11 +9,12 @@ conn = 8;       %连通类型
 Number = 280;   %斑点数量
 
 se_list = {'square','disk','diamond'};  %形态学结构列表
+se_list_img = zeros(41,41,3);
 r = linspace(1,20,20);                  %结构半径
 
 result = zeros(length(r),6);            %保存统计结果
 
-%% 读取图像
+% 读取图像
 % [filename, pathname] = uigetfile({'*.jpg;*.png;*.bmp;*.tif', '图像文件 (*.jpg, *.png, *.bmp, *.tif)'}, '选择要处理的图像');
 % if isequal(filename, 0)
 %     disp('用户取消了选择');
@@ -25,7 +26,7 @@ result = zeros(length(r),6);            %保存统计结果
 % imshow(originalImage);
 % title("原始图像")
 
-originalImage = imread("9.36.jpg");
+originalImage = imread("testphoto.jpg");
 figure;
 imshow(originalImage);
 title("原始图像")
@@ -75,6 +76,10 @@ for s = se_list
     
     end
     count = count + 1;
+    figure;
+%     se_list_img(:,:,count)=se.Neighborhood;
+    imshow(se.Neighborhood)
+
 
 
 end
