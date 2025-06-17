@@ -6,12 +6,12 @@ warning off
 
 %% 设置参数
 
-
+% 检测要求
 isnoline = 0;           %是否要求交点在线上
 minangle = 0.01;         %最小夹角（度）
 
 % 噪声参数
-
+which_noise = 1;        %噪声类型 0:高斯白噪声 1:椒盐噪声
 d = 0.1;                %椒盐噪声密度
 m = 0;                  %高斯噪声均值
 var_local = 0.1;        %高斯噪声方差
@@ -53,8 +53,11 @@ display_image_spectrum(img)
 display_image_spectrum(img_pepper_noise)
 display_image_spectrum(img_gaussian_noise)
 
-img_noise = img_gaussian_noise;
-
+if which_noise
+    img_noise = img_pepper_noise;
+else
+    img_noise = img_gaussian_noise;
+end
 
 %% 预处理
 
@@ -72,9 +75,9 @@ title("灰度化图像")
 
 %% 滤波去噪
 
-% img_medfilt = medfilt2(img_gray,[7 7]);
+% img_medfilt = medfilt2(img_gray,[8 8]);
 % img_gaussfilt = imgaussfilt(img_gray);
-img_filtered = real_time_filtering_demo(img_gray)
+img_filtered = real_time_filtering_demo(img_gray);
 figure;
 imshow(img_filtered)
 title("滤波后图像")
