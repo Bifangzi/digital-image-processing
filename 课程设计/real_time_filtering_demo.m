@@ -34,7 +34,7 @@ function filtered_img = real_time_filtering_demo(original_img)
     
     % 创建滑块（高斯滤波：标准差；中值/均值滤波：核大小）
     param_slider = uislider(control_panel, 'Position', [20, 360, 170, 22], ...
-        'Limits',[0 10],'Value',3);
+        'Limits',[0 7],'Value',3);
     
     % 退出按钮
     exit_btn = uibutton(control_panel, 'Position', [20, 100, 170, 30], ...
@@ -70,9 +70,6 @@ function filtered_img = real_time_filtering_demo(original_img)
         % 应用滤波
         switch filter_name
             case '高斯滤波'
-                if mod(param_val, 2) == 0
-                    param_val = param_val + 1;  % 确保核大小为奇数
-                end
                 filtered = imgaussfilt(img, param_val/2);
                 filter_desc = sprintf('高斯滤波 (标准差=%.1f)', param_val/2);
                 
