@@ -8,13 +8,19 @@ warning off
 
 % 检测要求
 isnoline = 0;           %是否要求交点在线上
-minangle = 0.01;         %最小夹角（度）
+minangle = 0.01;        %最小夹角（度）
 
 % 噪声参数
-which_noise = 1;        %噪声类型 0:高斯白噪声 1:椒盐噪声
+which_noise = 0;        %噪声类型 0:高斯白噪声 1:椒盐噪声
 d = 0.1;                %椒盐噪声密度
 m = 0;                  %高斯噪声均值
-var_local = 0.1;        %高斯噪声方差
+var_local = 0.05;        %高斯噪声方差
+
+% 获取屏幕大小用于最大化图窗
+
+scrsz = get(0,'ScreenSize');
+scrsz(3) = scrsz(3) - 200;
+scrsz(4) = scrsz(4) - 100;
 
 %% 读取图像
 
@@ -24,6 +30,14 @@ if isequal(filename, 0)
     return;
 end
 imagePath = fullfile(pathname, filename);
+
+% 提取文件名部分（不含扩展名）
+[~, name, ~] = fileparts(filename);
+
+% 转换为数值并计算角度
+num = str2double(name);
+angle_std = num / 100;  % 除以100得到实际角度值
+
 img = imread(imagePath);
 figure;
 imshow(img);
@@ -66,7 +80,7 @@ if size(img_noise,3)>1
     img_gray = im2gray(img_noise);
 end
 
-% [img_width , img_length] = size(img_gray);
+[img_width , img_length] = size(img_gray);
 % filter = zeros(img_width,img_length);
 
 figure;
@@ -77,17 +91,22 @@ title("灰度化图像")
 
 % img_medfilt = medfilt2(img_gray,[8 8]);
 % img_gaussfilt = imgaussfilt(img_gray);
+
 img_filtered = real_time_filtering_demo(img_gray);
+img_filtered = imread("./temp/filtered_img.jpg");
+delete("./temp/*")
 figure;
+
 imshow(img_filtered)
 title("滤波后图像")
 
-testphoto = img_filtered;
+testphoto = img_filtered(2:end-1,2:end-1);
 
 
 %% 边缘提取
 
-figure('name','边缘检测');
+f = figure('name','边缘检测');
+f.Position = scrsz;
 subplot(3,2,1);
 imshow(testphoto);
 title("检测图像");
@@ -110,8 +129,6 @@ subplot(3,2,4);
 imshow(prewitt_edge);
 title("Prewitt边缘检测");
 
-
-
 % log算子
 log_edge = edge(testphoto,"log");
 subplot(3,2,5);
@@ -125,13 +142,13 @@ imshow(canny_edge);
 title("Canny边缘检测");
 
 
-
 % 选择边缘检测算子结果
 method_list = {'sobel','roberts','prewitt','log','canny'};
 [indx,tf] = listdlg('ListString',method_list,...
     'Name','选择边缘检测算子结果','ListSize',[300 200]);
 
-figure;
+f = figure();
+f.Position = scrsz;
 for i=1:length(indx)
 
     switch indx(i)
@@ -162,7 +179,7 @@ for i=1:length(indx)
     hold on;
     colormap(gca, "turbo");
     colorbar;
-    plot(x, y, 's', 'color', 'blue');
+    plot(x, y, 's', 'color', 'red','MarkerSize',12,'LineWidth',2);
     subplot(length(indx),3,3*i)
     imshow(testphoto), hold on;
     for k = 1:length(lines)
@@ -230,6 +247,7 @@ if denominator/(norm([dx1 dy1])*norm([dx2 dy2]))<sind(minangle)
 end
 
 % 计算参数 t 和 u
+denominator = dy2 * dx1 - dx2 * dy1;
 t = ((x3 - x1) * dy2 + (y1 - y3) * dx2) / denominator;
 u = -((x1 - x3) * dy1 + (y3 - y1) * dx1) / denominator;
 
@@ -274,15 +292,37 @@ angle_rad = acos(min(max(dot_product, -1), 1)); % 确保在有效范围内
 
 % 转换为角度
 angle_deg = rad2deg(angle_rad);
+if angle_std < 90
+    if angle_deg >90
+        angle_deg = 180 -angle_deg;
+    end
+else
+    if angle_deg < 90
+        angle_deg = 180 - angle_deg;
+    end
+end
 
-
+        
 %% 显示结果
 
 figure(99)
-plot(intersection_point(1),intersection_point(2), 'p','MarkerSize' ,12, 'LineWidth', 2, 'Color', 'yellow');
+plot(intersection_point(1),intersection_point(2), 'p','MarkerSize' ,12, 'LineWidth', 2, 'Color', 'red');
+for k = 1:length(lines)
+   xy = [lines(k).point1; lines(k).point2];
+   plot([xy(1,1) intersection_x], [xy(1,2) intersection_y], '--','LineWidth', 2, 'Color', 'green');
+   
+end
 
-fprintf("交点坐标为：(%.2f,%.2f)",intersection_point(1),intersection_point(2))
-fprintf("夹角大小为：%.2f",angle_deg)
+absolute_error = angle_deg - angle_std;
+relative_error = absolute_error/angle_std;
+
+str = sprintf("交点坐标为:(%.2f,%.2f) 夹角为:%.4f",intersection_x,intersection_y,angle_deg);
+text(intersection_x,intersection_y+20,str);
+
+fprintf("计算角度绝对误差为:%.4f ,相对误差为:%.4f",absolute_error,relative_error)
+
+% fprintf("交点坐标为：(%.2f,%.2f)",intersection_point(1),intersection_point(2))
+% fprintf("夹角大小为：%.2f",angle_deg)
 
 
 

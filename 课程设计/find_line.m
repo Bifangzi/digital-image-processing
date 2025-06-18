@@ -12,6 +12,6 @@ y = rho(peaks(:, 1));
 
 
 % 根据峰值点找到对应的线段
-lines = houghlines(image, theta, rho, peaks, 'FillGap', 100, 'MinLength', 20);
+lines = houghlines(image, theta, rho, peaks, 'FillGap', 100, 'MinLength', 40);
 end
 

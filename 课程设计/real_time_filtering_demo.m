@@ -7,7 +7,9 @@ function filtered_img = real_time_filtering_demo(original_img)
         original_img = rgb2gray(original_img);
     end
     filtered_img = original_img;
-    
+    % global FILTERED_IMAGE;
+    % FILTERED_IMAGE = original_img;
+
     % 创建图像显示区域 - 左侧为原始图像，右侧为滤波后图像
     img_panel1 = uipanel(fig, 'Title', '原始图像', 'Position', [10, 10, 470, 500]);
     img_panel2 = uipanel(fig, 'Title', '滤波后图像', 'Position', [500, 10, 470, 500]);
@@ -26,47 +28,58 @@ function filtered_img = real_time_filtering_demo(original_img)
     % 滤波器类型选择
     filter_type = uilabel(control_panel, 'Text', '滤波器类型:', 'Position', [20, 460, 100, 22]);
     filter_dropdown = uidropdown(control_panel, 'Position', [20, 430, 170, 22], ...
-        'Items', {'高斯滤波', '中值滤波', '均值滤波'});
+        'Items', {'高斯滤波', '中值滤波', '均值滤波','双边滤波','引导滤波'});
     
     % 参数标签和滑块
-    param_label = uilabel(control_panel, 'Text', '参数:', 'Position', [20, 390, 100, 22]);
+    param_label = uilabel(control_panel, 'Text', '参数1:', 'Position', [20, 390, 100, 22]);
     param_value = uilabel(control_panel, 'Text', '3', 'Position', [160, 390, 30, 22]);
     
     % 创建滑块（高斯滤波：标准差；中值/均值滤波：核大小）
     param_slider = uislider(control_panel, 'Position', [20, 360, 170, 22], ...
-        'Limits',[0 7],'Value',3);
+        'Limits',[0 7],'Value',1);
+
+    % 2
+    param_label_2 = uilabel(control_panel, 'Text', '参数2:', 'Position', [20, 240, 100, 22]);
+    param_value_2 = uilabel(control_panel, 'Text', '3', 'Position', [160, 240, 30, 22]);
+    
+    
+    param_slider_2 = uislider(control_panel, 'Position', [20, 210, 170, 22], ...
+        'Limits',[0 5],'Value',1);
+
+
     
     % 退出按钮
     exit_btn = uibutton(control_panel, 'Position', [20, 100, 170, 30], ...
-        'Text', '退出并返回结果', 'ButtonPushedFcn', @(~,~) delete(fig));
-    
+        'Text', '退出并返回结果', 'ButtonPushedFcn', @(~,~) set_output_and_exit());
+   
     % 实时更新图像的回调函数
     update_filtered_image = @(src, event) update_image(src, event, filter_dropdown, param_slider, ...
-                                                         h_original, h_filtered, ax2, param_value, original_img);
+                                                         h_original, h_filtered, ax2, param_value, original_img,param_slider_2,param_value_2);
     
     % 绑定回调函数
     addlistener(filter_dropdown, 'ValueChanged', update_filtered_image);
     addlistener(param_slider, 'ValueChanged', update_filtered_image);
-    
+    addlistener(param_slider_2, 'ValueChanged', update_filtered_image);
+
     % 初始化显示
-    filtered_img = update_image(nan, nan, filter_dropdown, param_slider, h_original, h_filtered, ax2, param_value, original_img);
+    filtered_img = update_image(nan, nan, filter_dropdown, param_slider, h_original, h_filtered, ax2, param_value, original_img,param_slider_2,param_value_2);
     
     % 等待窗口关闭
     waitfor(fig);
     
     % 返回最终滤波结果
-    % filtered = get(h_filtered, 'CData');
+    % filtered_img = get(h_filtered, 'CData');
     
     % 更新图像的函数
-    function re = update_image(src, event, filter_dropdown, param_slider, h_original, h_filtered, ax, param_value_label, img)
+    function re = update_image(~, ~, filter_dropdown, param_slider, h_original, h_filtered, ax, param_value_label, img ,parm_slider_2,parm_value_label_2)
         % 获取当前选择的滤波器和参数值
         filter_name = filter_dropdown.Value;
         % filter_name = filter_dropdown.Items{filter_idx};
         param_val = round(param_slider.Value);
-        
+        param_val_2 = round(parm_slider_2.Value);
         % 更新参数显示
         param_value_label.Text = num2str(param_val);
-        
+        parm_value_label_2.Text = num2str(param_val_2);
         % 应用滤波
         switch filter_name
             case '高斯滤波'
@@ -83,11 +96,31 @@ function filtered_img = real_time_filtering_demo(original_img)
             case '均值滤波'
                 filtered = imfilter(img, fspecial('average', param_val));
                 filter_desc = sprintf('均值滤波 (核大小=%dx%d)', param_val, param_val);
+            case '双边滤波'
+                filtered = imbilatfilt(img,param_val_2/10,'NeighborhoodSize',param_val);
+                filter_desc = sprintf('双边滤波 (核大小=%d)', param_val*2+1);
+            case '引导滤波'
+                filtered = imguidedfilter(img,img,'NeighborhoodSize',[param_val param_val],'DegreeOfSmoothing',param_val_2);
+                filter_desc = sprintf('引导滤波 (核大小=%dx%d)', param_val, param_val);
         end
         
         % 更新显示
         set(h_filtered, 'CData', filtered);
-        re = filtered;
+        
         title(ax, filter_desc);
+        re = filtered;
+        imwrite(re,"./temp/filtered_img.jpg");
     end
+    % Create the function for the ButtonPushedFcn callback
+    function set_output_and_exit()
+
+        
+        
+        
+        
+        % 关闭窗口
+        delete(fig);
+    end
+    
+    
 end
