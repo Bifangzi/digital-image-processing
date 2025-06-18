@@ -1,161 +1,288 @@
-%%
+%% 清空环境
+
 clear;clc;
 close all
+warning off
 
-%% 参数设置
-sigma = 1.0;          % 高斯滤波器标准差
-threshold_low = 50;   % Canny边缘检测低阈值
-threshold_high = 150; % Canny边缘检测高阈值
-rho_res = 1;          % Hough变换距离分辨率(pixels)
-theta_res = pi/180;   % Hough变换角度分辨率(radians)
-votes_threshold = 100; % Hough变换投票阈值
+%% 设置参数
+
+% 检测要求
+isnoline = 0;           %是否要求交点在线上
+minangle = 0.01;         %最小夹角（度）
+
+% 噪声参数
+which_noise = 1;        %噪声类型 0:高斯白噪声 1:椒盐噪声
+d = 0.1;                %椒盐噪声密度
+m = 0;                  %高斯噪声均值
+var_local = 0.1;        %高斯噪声方差
 
 %% 读取图像
-% 可替换为实际图像路径
-image = imread("test.png");
-if size(image, 3) > 1
-    image = rgb2gray(image); % 转为灰度图
+
+[filename, pathname] = uigetfile({'*.jpg;*.png;*.bmp;*.tif', '图像文件 (*.jpg, *.png, *.bmp, *.tif)'}, '选择要处理的图像');
+if isequal(filename, 0)
+    disp('用户取消了选择');
+    return;
 end
+imagePath = fullfile(pathname, filename);
+img = imread(imagePath);
+figure;
+imshow(img);
+title("原始图像")
 
-%% 显示原始图像
-figure('Position', [100, 100, 1200, 800]);
-subplot(2, 3, 1);
-imshow(image);
-title('原始图像');
 
-%% 步骤1: 高斯滤波去噪
-filtered_image = imgaussfilt(image, sigma);
-subplot(2, 3, 2);
-imshow(filtered_image);
-title('高斯滤波后图像');
+%% 噪声处理
 
-%% 步骤2: 边缘检测
-% edge_image = edge(filtered_image, 'Canny', [threshold_low, threshold_high]);
-edge_image = edge(filtered_image, 'Canny');
-subplot(2, 3, 3);
-imshow(edge_image);
-title('Canny边缘检测结果');
+% 施加高斯白噪声和椒盐噪声
+img_pepper_noise = imnoise(img,'salt & pepper', d);
+img_gaussian_noise = imnoise(img,'gaussian',m,var_local);
+figure;
+title("噪声处理")
+subplot(1,3,1)
+imshow(img)
+title("原始图像")
+subplot(1,3,2)
+imshow(img_pepper_noise)
+title("施加椒盐噪声")
+subplot(1,3,3)
+imshow(img_gaussian_noise)
+title("施加高斯白噪声")
 
-%% 步骤3: Hough变换检测直线
-[H, theta, rho] = hough(edge_image, 'RhoResolution', rho_res, 'ThetaResolution', theta_res);
-subplot(2, 3, 4);
-imshow(imadjust(mat2gray(H)), 'XData', theta*180/pi, 'YData', rho, 'InitialMagnification', 'fit');
-title('Hough变换累积矩阵');
-xlabel('\theta (degrees)');
-ylabel('\rho (pixels)');
-axis on;
+% 计算图像的傅里叶频谱
 
-% 寻找峰值
-peaks = houghpeaks(H, 2, 'Threshold', votes_threshold);
-subplot(2, 3, 4);
-hold on;
-plot(theta(peaks(:, 2))*180/pi, rho(peaks(:, 1)), 'rs', 'MarkerSize', 10, 'LineWidth', 2);
-hold off;
+display_image_spectrum(img)
+display_image_spectrum(img_pepper_noise)
+display_image_spectrum(img_gaussian_noise)
 
-% 提取直线
-lines = houghlines(edge_image, theta, rho, peaks);
-subplot(2, 3, 5);
-imshow(image);
-title('检测到的直线');
-hold on;
-
-% 绘制检测到的直线
-max_len = 0;
-line_points = zeros(2, 4); % 存储两条直线的端点
-for k = 1:length(lines)
-    xy = [lines(k).point1; lines(k).point2];
-    line_points(k, :) = [xy(1,1), xy(1,2), xy(2,1), xy(2,2)];
-    plot(xy(:,1), xy(:,2), 'LineWidth', 2, 'Color', 'green');
-    
-    % 绘制直线端点
-    plot(xy(1,1), xy(1,2), 'x', 'LineWidth', 2, 'Color', 'yellow');
-    plot(xy(2,1), xy(2,2), 'x', 'LineWidth', 2, 'Color', 'red');
-end
-hold off;
-
-%% 步骤4: 计算交点和夹角
-if length(lines) >= 2
-    % 提取两条直线的端点
-    x1 = line_points(1, 1); y1 = line_points(1, 2);
-    x2 = line_points(1, 3); y2 = line_points(1, 4);
-    x3 = line_points(2, 1); y3 = line_points(2, 2);
-    x4 = line_points(2, 3); y4 = line_points(2, 4);
-    
-    % 计算交点
-    denominator = (x1-x2)*(y3-y4) - (y1-y2)*(x3-x4);
-    
-    if denominator == 0
-        disp('错误: 两条直线平行或重合');
-    else
-        px = ((x1*y2 - y1*x2)*(x3-x4) - (x1-x2)*(x3*y4 - y3*x4)) / denominator;
-        py = ((x1*y2 - y1*x2)*(y3-y4) - (y1-y2)*(x3*y4 - y3*x4)) / denominator;
-        
-        % 计算直线方向向量
-        v1 = [x2-x1, y2-y1];
-        v2 = [x4-x3, y4-y3];
-        
-        % 归一化向量
-        v1 = v1 / norm(v1);
-        v2 = v2 / norm(v2);
-        
-        % 计算夹角(弧度)
-        cos_theta = dot(v1, v2);
-        angle_rad = acos(cos_theta);
-        angle_deg = rad2deg(angle_rad);
-        
-        % 显示结果
-        subplot(2, 3, 6);
-        imshow(image);
-        title(sprintf('交点坐标: (%.2f, %.2f), 夹角: %.2f°', px, py, angle_deg));
-        hold on;
-        
-        % 绘制直线
-        for k = 1:length(lines)
-            xy = [lines(k).point1; lines(k).point2];
-            plot(xy(:,1), xy(:,2), 'LineWidth', 2, 'Color', 'green');
-        end
-        
-        % 绘制交点
-        plot(px, py, 'ro', 'MarkerSize', 10, 'LineWidth', 2);
-        
-        % 绘制角度指示
-        radius = 50;
-        angle1 = atan2(v1(2), v1(1));
-        angle2 = atan2(v2(2), v2(1));
-        
-        % 确保角度在正确范围内
-        if angle1 < 0
-            angle1 = angle1 + 2*pi;
-        end
-        if angle2 < 0
-            angle2 = angle2 + 2*pi;
-        end
-        
-        % 确定绘制角度的方向
-        if angle1 > angle2
-            temp = angle1;
-            angle1 = angle2;
-            angle2 = temp;
-        end
-        
-        % 绘制圆弧
-        arc_angles = linspace(angle1, angle2, 100);
-        arc_x = px + radius * cos(arc_angles);
-        arc_y = py + radius * sin(arc_angles);
-        plot(arc_x, arc_y, 'b-', 'LineWidth', 1.5);
-        
-        % 显示角度值
-        mid_angle = (angle1 + angle2) / 2;
-        text_x = px + radius*1.2 * cos(mid_angle);
-        text_y = py + radius*1.2 * sin(mid_angle);
-        text(text_x, text_y, sprintf('%.1f°', angle_deg), 'Color', 'blue', 'FontSize', 12);
-        
-        hold off;
-        
-        % 输出结果到命令窗口
-        fprintf('交点坐标: (%.2f, %.2f)\n', px, py);
-        fprintf('两直线夹角: %.2f°\n', angle_deg);
-    end
+if which_noise
+    img_noise = img_pepper_noise;
 else
-    disp('错误: 未检测到足够的直线');
+    img_noise = img_gaussian_noise;
 end
+
+%% 预处理
+
+% 转换为灰度图
+if size(img_noise,3)>1
+    img_gray = im2gray(img_noise);
+end
+
+% [img_width , img_length] = size(img_gray);
+% filter = zeros(img_width,img_length);
+
+figure;
+imshow(img_gray)
+title("灰度化图像")
+
+%% 滤波去噪
+
+% img_medfilt = medfilt2(img_gray,[8 8]);
+% img_gaussfilt = imgaussfilt(img_gray);
+img_filtered = real_time_filtering_demo(img_gray);
+figure;
+imshow(img_filtered)
+title("滤波后图像")
+
+testphoto = img_filtered;
+
+
+%% 边缘提取
+
+figure('name','边缘检测');
+subplot(3,2,1);
+imshow(testphoto);
+title("检测图像");
+
+% Sobel算子
+sobel_edge = edge(testphoto,"sobel");
+subplot(3,2,2);
+imshow(sobel_edge);
+title("Sobel边缘检测");
+
+% Roberts算子
+roberts_edge = edge(testphoto,"roberts");
+subplot(3,2,3);
+imshow(roberts_edge);
+title("Roberts边缘检测");
+
+% prewitt算子
+prewitt_edge = edge(testphoto,"roberts");
+subplot(3,2,4);
+imshow(prewitt_edge);
+title("Prewitt边缘检测");
+
+
+
+% log算子
+log_edge = edge(testphoto,"log");
+subplot(3,2,5);
+imshow(log_edge);
+title("log边缘检测");
+
+% Canny算子
+canny_edge = edge(testphoto,"canny");
+subplot(3,2,6);
+imshow(canny_edge);
+title("Canny边缘检测");
+
+
+
+% 选择边缘检测算子结果
+method_list = {'sobel','roberts','prewitt','log','canny'};
+[indx,tf] = listdlg('ListString',method_list,...
+    'Name','选择边缘检测算子结果','ListSize',[300 200]);
+
+figure;
+for i=1:length(indx)
+
+    switch indx(i)
+        case 1
+            binaryEdgeImage = sobel_edge;
+        case 2
+            binaryEdgeImage = roberts_edge;
+        case 3
+            binaryEdgeImage = prewitt_edge;
+        case 4
+            binaryEdgeImage = log_edge;
+        case 5
+            binaryEdgeImage = canny_edge;
+    end
+
+    subplot(length(indx),3,3*i-2)
+    imshow(binaryEdgeImage);
+    title([method_list(indx(i)) "算子结果二值化"])
+    [H, theta, rho,x,y,lines]=find_line(binaryEdgeImage);
+    subplot(length(indx),3,3*i-1)
+    imshow(imadjust(rescale(H)), 'XData', theta, 'YData', rho,...
+      'InitialMagnification', 'fit');
+    title([method_list(indx(i)) "算子Hough变换结果"]);
+    xlabel('\theta (degrees)');
+    ylabel('\rho');
+    axis on;
+    axis normal;
+    hold on;
+    colormap(gca, "turbo");
+    colorbar;
+    plot(x, y, 's', 'color', 'blue');
+    subplot(length(indx),3,3*i)
+    imshow(testphoto), hold on;
+    for k = 1:length(lines)
+       xy = [lines(k).point1; lines(k).point2];
+       plot(xy(:,1), xy(:,2), 'LineWidth', 2, 'Color', 'green');
+       
+       % 绘制直线端点
+
+       plot(xy(1,1), xy(1,2), 'x', 'LineWidth', 2, 'Color', 'yellow');
+       plot(xy(2,1), xy(2,2), 'x', 'LineWidth', 2, 'Color', 'red');
+    end
+    
+    title([method_list(indx(i)) "算子Hough变换检测到的直线"]);
+end
+
+%% 提取直线
+
+figure(99)
+imshow(img), hold on;
+for k = 1:length(lines)
+   xy = [lines(k).point1; lines(k).point2];
+   plot(xy(:,1), xy(:,2), 'LineWidth', 2, 'Color', 'green');
+   % 绘制直线端点
+
+   plot(xy(1,1), xy(1,2), 'x', 'LineWidth', 2, 'Color', 'yellow');
+   plot(xy(2,1), xy(2,2), 'x', 'LineWidth', 2, 'Color', 'red');
+end
+
+title("Hough变换检测到的直线");
+
+
+%% 计算直线方程
+
+% 提取线段端点
+point_1 = lines(1).point1;
+x1 = point_1(1);
+y1 = point_1(2);
+
+point_2 = lines(1).point2;
+x2 = point_2(1);
+y2 = point_2(2);
+
+point_3 = lines(2).point1;
+x3 = point_3(1);
+y3 = point_3(2);
+
+point_4 = lines(2).point2;
+x4 = point_4(1);
+y4 = point_4(2);
+
+
+% 计算两条线段的向量
+dx1 = x2 - x1; dy1 = y2 - y1;
+dx2 = x4 - x3; dy2 = y4 - y3;
+
+% 检查线段是否平行或共线（避免除以零）
+denominator = abs(dy2 * dx1 - dx2 * dy1);
+
+if denominator/(norm([dx1 dy1])*norm([dx2 dy2]))<sind(minangle)
+    % 线段平行或共线，无交点或无限多交点
+    intersection_point = [];
+    angle_deg = 0;
+    disp('线段平行或共线，无唯一交点');
+    return;
+end
+
+% 计算参数 t 和 u
+t = ((x3 - x1) * dy2 + (y1 - y3) * dx2) / denominator;
+u = -((x1 - x3) * dy1 + (y3 - y1) * dx1) / denominator;
+
+% 检查交点是否在线段上
+if isnoline
+    if t >= 0 && t <= 1 && u >= 0 && u <= 1
+        intersection_x = x1 + t * dx1;
+        intersection_y = y1 + t * dy1;
+        intersection_point = [intersection_x, intersection_y];
+    else
+        intersection_point = [];
+        disp('线段不相交');
+        return;
+    end
+end
+
+intersection_x = x1 + t * dx1;
+intersection_y = y1 + t * dy1;
+intersection_point = [intersection_x, intersection_y];
+
+
+%% 计算交点坐标
+
+intersection_x = x1 + t * dx1;
+intersection_y = y1 + t * dy1;
+intersection_point = [intersection_x, intersection_y];
+
+
+%% 计算夹角
+
+% 计算夹角（单位向量点积）
+vec1 = [dx1, dy1];
+vec2 = [dx2, dy2];
+
+% 归一化向量
+norm_vec1 = vec1 / norm(vec1);
+norm_vec2 = vec2 / norm(vec2);
+
+% 计算点积和夹角（弧度）
+dot_product = dot(norm_vec1, norm_vec2);
+angle_rad = acos(min(max(dot_product, -1), 1)); % 确保在有效范围内
+
+% 转换为角度
+angle_deg = rad2deg(angle_rad);
+
+
+%% 显示结果
+
+figure(99)
+plot(intersection_point(1),intersection_point(2), 'p','MarkerSize' ,12, 'LineWidth', 2, 'Color', 'yellow');
+
+fprintf("交点坐标为：(%.2f,%.2f)",intersection_point(1),intersection_point(2))
+fprintf("夹角大小为：%.2f",angle_deg)
+
+
+
