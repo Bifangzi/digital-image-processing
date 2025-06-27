@@ -6,15 +6,18 @@ warning off
 
 %% 设置参数
 
+result_path = "./result/case10/";
+mkdir(result_path)
+
 % 检测要求
 isnoline = 0;           %是否要求交点在线上
 minangle = 0.01;        %最小夹角（度）
 
 % 噪声参数
-which_noise = 0;        %噪声类型 0:高斯白噪声 1:椒盐噪声
+which_noise = 1;        %噪声类型 0:高斯白噪声 1:椒盐噪声
 d = 0.1;                %椒盐噪声密度
 m = 0;                  %高斯噪声均值
-var_local = 0.05;        %高斯噪声方差
+var_local = 0.05;       %高斯噪声方差
 
 % 获取屏幕大小用于最大化图窗
 
@@ -197,7 +200,8 @@ end
 
 %% 提取直线
 
-figure(99)
+f = figure(99);
+f.Position = scrsz;
 imshow(img), hold on;
 for k = 1:length(lines)
    xy = [lines(k).point1; lines(k).point2];
@@ -305,7 +309,8 @@ end
         
 %% 显示结果
 
-figure(99)
+f = figure(99);
+f.Position = scrsz;
 plot(intersection_point(1),intersection_point(2), 'p','MarkerSize' ,12, 'LineWidth', 2, 'Color', 'red');
 for k = 1:length(lines)
    xy = [lines(k).point1; lines(k).point2];
@@ -324,5 +329,16 @@ fprintf("计算角度绝对误差为:%.4f ,相对误差为:%.4f",absolute_error,
 % fprintf("交点坐标为：(%.2f,%.2f)",intersection_point(1),intersection_point(2))
 % fprintf("夹角大小为：%.2f",angle_deg)
 
-
-
+%% 保存图像结果
+saveas(99,strcat(result_path,"/坐标和角度.jpg"))
+saveas(9,strcat(result_path,"/hough变换.jpg"))
+saveas(8,strcat(result_path,"/边缘检测.jpg"))
+saveas(7,strcat(result_path,"/滤波.jpg"))
+saveas(6,strcat(result_path,"/带噪灰度.jpg"))
+if which_noise
+    saveas(4,strcat(result_path,"/带噪傅里叶.jpg"))
+else
+    saveas(5,strcat(result_path,"/带噪傅里叶.jpg"))
+end
+saveas(3,strcat(result_path,"/原始傅里叶.jpg"))
+saveas(1,strcat(result_path,"/原始.jpg"))
